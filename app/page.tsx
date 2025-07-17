@@ -1,4 +1,3 @@
-import { Pump } from '@/.basehub/react-pump'
 import {
   Box,
   Container,
@@ -11,51 +10,49 @@ import {
 } from '@radix-ui/themes'
 import { CategoryCard, CategoryMeta } from './_components/category-card'
 import { ArticleLink, ArticleMeta } from './_components/article-link'
-
-import { RichText } from 'basehub/react-rich-text'
+import { RichText } from '@/lib/markdown/markdown-renderer'
 import { DialogTriggerDesktop as Search } from './_components/search'
-import { draftMode } from 'next/headers'
-import { PageView } from './_components/analytics/page-view'
+import { sampleIndexPage, sampleCategories } from '@/lib/data/sample-data'
 
-export default async function HomePage() {
-  return (
-    <Pump
-      queries={[
-        {
+export default function HomePage() {
+  // Use local data instead of BaseHub
+  const data = {
           index: {
-            analytics: {
-              views: {
-                ingestKey: true,
-              },
-            },
-            greeting: true,
-            subtitle: {
-              json: {
-                content: true,
-              },
-            },
+      ...sampleIndexPage,
             popularArticlesSection: {
-              title: true,
-              articles: ArticleMeta,
+        title: 'Popular Articles',
+        articles: sampleIndexPage.popularArticlesSection.articles
             },
             categoriesSection: {
-              title: true,
+        title: 'Browse by Category',
               categories: {
-                items: CategoryMeta,
-              },
-            },
-          },
-        },
-      ]}
-      draft={(await draftMode()).isEnabled}
-      next={{ revalidate: 60 }}
-    >
-      {async ([data]) => {
-        'use server'
+          items: sampleCategories
+        }
+      }
+    }
+  }
+
+  // Helper function to find category for an article
+  const findCategoryForArticle = (articleId: string) => {
+    for (const category of sampleCategories) {
+      // Check direct articles in category
+      if (category.articles?.items?.some(item => item._id === articleId)) {
+        return category
+      }
+      // Check articles in subcategories
+      if (category.subcategories?.items) {
+        for (const subcategory of category.subcategories.items) {
+          if (subcategory.articles?.items?.some(item => item._id === articleId)) {
+            return category
+          }
+        }
+      }
+    }
+    return null
+  }
 
         return (
           <>
-            <PageView ingestKey={data.index.analytics.views.ingestKey} />
             <Flex
               direction="column"
               align="center"
@@ -72,14 +69,7 @@ export default async function HomePage() {
               <Search style={{ width: '100%' }} />
               {data.index.subtitle?.json && (
                 <Text as="span" color="gray" size="2">
-                  <RichText
-                    components={{
-                      a: (props) => <Link {...props} />,
-                      p: (props) => <Text {...props} />,
-                    }}
-                  >
-                    {data.index.subtitle.json.content}
-                  </RichText>
+            <RichText content={data.index.subtitle.json.content} />
                 </Text>
               )}
             </Flex>
@@ -92,7 +82,6 @@ export default async function HomePage() {
               overflow="clip"
               px={{ initial: '5', md: '7' }}
             >
-              {/* radial-gradient(farthest-side, var(--purple-3), transparent) */}
               <Box
                 style={{
                   zIndex: -1,
@@ -123,44 +112,24 @@ export default async function HomePage() {
                   <Heading size="4" mb="4">
                     {data.index.popularArticlesSection.title}
                   </Heading>
-                  <ScrollArea
-                    type="hover"
-                    scrollbars="horizontal"
-                    style={{
-                      width: 'calc(100% + var(--space-5) * 2)',
-                    }}
-                    mx="calc(-1 * var(--space-5))"
-                  >
                     <Grid
                       gap="4"
-                      px="5"
-                      flow={{ initial: 'column', sm: 'row' }}
-                      columns={{ sm: '2' }}
-                      width={{ initial: 'max-content', sm: 'auto' }}
-                      style={{ gridAutoColumns: 'minmax(260px, 1fr)' }}
+              columns={{ initial: '1', md: '2' }}
                     >
                       {data.index.popularArticlesSection.articles.map(
                         (article) => {
-                          const category =
-                            data.index.categoriesSection.categories.items.find(
-                              (category) => {
-                                return category.articles.items.some(
-                                  (item) => item._id === article._id
-                                )
-                              }
-                            )
+                  const category = findCategoryForArticle(article._id)
                           if (!category) return null
                           return (
                             <ArticleLink
                               data={article}
                               key={article._id}
-                              categorySlug={category?._slug}
+                      categorySlug={category._slug}
                             />
                           )
                         }
                       )}
                     </Grid>
-                  </ScrollArea>
                 </Box>
 
                 <Box>
@@ -180,8 +149,5 @@ export default async function HomePage() {
               </Grid>
             </Container>
           </>
-        )
-      }}
-    </Pump>
   )
 }

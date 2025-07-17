@@ -1,12 +1,21 @@
 'use client'
 
 import { useThemeContext } from '@radix-ui/themes'
-import { ThemeFragment } from './server'
 import * as React from 'react'
 import { useTheme } from 'next-themes'
 import { useHasRendered } from '@/hooks/use-has-rendered'
 
-export const LiveThemeSwitcher = ({ theme }: { theme: ThemeFragment }) => {
+// Simple theme interface for local use with proper Radix UI types
+interface LocalTheme {
+  accentColor: "ruby" | "gray" | "gold" | "bronze" | "brown" | "yellow" | "amber" | "orange" | "tomato" | "red" | "crimson" | "pink" | "plum" | "purple" | "violet" | "iris" | "indigo" | "blue" | "cyan" | "teal" | "jade" | "green" | "grass" | "lime" | "mint" | "sky"
+  appearance: "inherit" | "light" | "dark"
+  grayScale: "auto" | "gray" | "mauve" | "slate" | "sage" | "olive" | "sand"
+  panelBackground: "solid" | "translucent"
+  radius: "none" | "small" | "medium" | "large" | "full"
+  scaling: "90%" | "95%" | "100%" | "105%" | "110%"
+}
+
+export const LiveThemeSwitcher = ({ theme }: { theme: LocalTheme }) => {
   const {
     onAccentColorChange,
     onRadiusChange,
@@ -15,29 +24,24 @@ export const LiveThemeSwitcher = ({ theme }: { theme: ThemeFragment }) => {
     onAppearanceChange,
     onPanelBackgroundChange,
   } = useThemeContext()
-  const { setTheme, theme: activeTheme } = useTheme()
-  const activeThemeRef = React.useRef(activeTheme)
-  activeThemeRef.current = activeTheme
+  const { setTheme, theme: activeTheme, resolvedTheme } = useTheme()
   const hasRendered = useHasRendered()
 
   React.useEffect(() => {
-    // wait for first render to happen before re-syncing theme
+    // Only apply theme changes after hydration is complete
     if (!hasRendered) return
-    onAccentColorChange(theme.accentColor)
+
+    onAccentColorChange(theme.accentColor || 'lime')
     onRadiusChange(theme.radius)
     onGrayColorChange(theme.grayScale)
-    onAppearanceChange(theme.appearance)
     onScalingChange(theme.scaling)
     onPanelBackgroundChange(theme.panelBackground)
 
-    const themeChanged =
-      activeThemeRef.current !== theme.appearance &&
-      theme.appearance !== 'inherit'
-    if (themeChanged && theme.appearance) {
-      if (!theme.appearance || theme.appearance === 'inherit') {
-        setTheme('system')
-      }
-      return setTheme(theme.appearance)
+    // Handle appearance change more carefully
+    const currentAppearance = resolvedTheme || 'light'
+    if (theme.appearance !== 'inherit' && theme.appearance !== currentAppearance) {
+      onAppearanceChange(theme.appearance)
+      setTheme(theme.appearance)
     }
   }, [
     theme.accentColor,
@@ -54,6 +58,7 @@ export const LiveThemeSwitcher = ({ theme }: { theme: ThemeFragment }) => {
     onPanelBackgroundChange,
     setTheme,
     hasRendered,
+    resolvedTheme,
   ])
 
   return null

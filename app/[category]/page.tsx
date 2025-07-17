@@ -1,28 +1,17 @@
-import { Pump } from '@/.basehub/react-pump'
-import { Container, Grid, Heading, Text } from '@radix-ui/themes'
-import { basehub } from '@/.basehub'
+import { Container, Grid, Heading, Text, Box, Separator } from '@radix-ui/themes'
 import { CategoryMeta } from '../_components/category-card'
-import { ArticleMeta } from '../_components/article-link'
+import { ArticleLink } from '../_components/article-link'
 import { notFound } from 'next/navigation'
 import { ArticlesList } from '../_components/articles-list'
 import { Breadcrumb } from '../_components/breadcrumb'
-import { draftMode } from 'next/headers'
 import type { Metadata } from 'next/types'
-import { MetadataFragment } from '../_fragments'
 import { PageView } from '../_components/analytics/page-view'
+import { CategoryTracking } from '../_components/category-tracking'
+import { sampleCategories } from '@/lib/data/sample-data'
 
 export const generateStaticParams = async () => {
-  const data = await basehub({ next: { revalidate: 120 } }).query({
-    index: {
-      categoriesSection: {
-        title: true,
-        categories: {
-          items: CategoryMeta,
-        },
-      },
-    },
-  })
-  return data.index.categoriesSection.categories.items.map((category) => ({
+  // Use local data instead of BaseHub
+  return sampleCategories.map((category) => ({
     params: { category: category._slug },
   }))
 }
@@ -33,38 +22,12 @@ export const generateMetadata = async ({
   params: Promise<{ category: string }>
 }): Promise<Metadata> => {
   const params = await _params
-  const data = await basehub({
-    next: { revalidate: 60 },
-    draft: (await draftMode()).isEnabled,
-  }).query({
-    settings: {
-      metadata: MetadataFragment,
-    },
-    index: {
-      categoriesSection: {
-        title: true,
-        categories: {
-          __args: {
-            first: 1,
-            filter: { _sys_slug: { eq: params.category } },
-          },
-          items: {
-            ...CategoryMeta,
-            ogImage: {
-              url: true,
-            },
-          },
-        },
-      },
-    },
-  })
-
-  const category = data.index.categoriesSection.categories.items[0]
+  const category = sampleCategories.find(cat => cat._slug === params.category)
+  
   if (!category) return {}
-  const siteName = data.settings.metadata.title
-
+  
   const title = {
-    absolute: `${category._title} | ${siteName}`,
+    absolute: `${category._title} | Help Center`,
   }
   const description = !category.description
     ? undefined
@@ -84,14 +47,14 @@ export const generateMetadata = async ({
     title,
     description,
     icons: {
-      icon: data.settings.metadata.icon.url,
-      shortcut: data.settings.metadata.icon.url,
-      apple: data.settings.metadata.icon.url,
+      icon: '/favicon.ico',
+      shortcut: '/favicon.ico',
+      apple: '/favicon.ico',
     },
     openGraph: {
       title,
       description,
-      siteName,
+      siteName: 'Help Center',
       locale: 'en-US',
       type: 'website',
       url: `/${params.category}`,
@@ -106,77 +69,74 @@ export default async function CategoryPage({
   params: Promise<{ category: string }>
 }) {
   const params = await _params
+  const category = sampleCategories.find(cat => cat._slug === params.category)
+  
+  if (!category) notFound()
+
   return (
-    <Pump
-      draft={(await draftMode()).isEnabled}
-      queries={[
-        {
-          index: {
-            categoriesSection: {
-              title: true,
-              categories: {
-                __args: {
-                  first: 1,
-                  filter: { _sys_slug: { eq: params.category } },
-                },
-                items: {
-                  analytics: {
-                    views: {
-                      ingestKey: true,
-                    },
-                  },
-                  ...CategoryMeta,
-                  articles: {
-                    items: ArticleMeta,
-                  },
-                },
-              },
-            },
-          },
-        },
-      ]}
-      next={{ revalidate: 60 }}
-    >
-      {async ([data]) => {
-        'use server'
-
-        const category = data.index.categoriesSection.categories.items[0]
-        if (!category) notFound()
-
-        return (
-          <>
-            <PageView ingestKey={category.analytics.views.ingestKey} />
-            <Container
-              pb="9"
-              mt={{ initial: 'var(--header-margin)', md: '0' }}
-              pt={{ initial: '6', sm: '0' }}
-              px={{ initial: '5', md: '7' }}
-              style={{ flexGrow: '1' }}
-              size="4"
-              maxWidth="1024px"
-              asChild
-            >
-              <main>
-                <Breadcrumb category={category} />
-                <Grid
-                  gapX="7"
-                  flow="column"
-                  gapY="2"
-                  columns={{ sm: 'minmax(auto, 308px) 1fr' }}
-                  rows={{ initial: 'auto auto 1fr', sm: 'auto 1fr' }}
+    <>
+      <PageView ingestKey="category-view" />
+      <CategoryTracking categoryName={category._title} />
+      <Container
+        pb="9"
+        mt={{ initial: 'var(--header-margin)', md: '0' }}
+        pt={{ initial: '6', sm: '0' }}
+        px={{ initial: '5', md: '7' }}
+        style={{ flexGrow: '1' }}
+        size="4"
+        maxWidth="1024px"
+        asChild
+      >
+        <main>
+          <Breadcrumb category={category} />
+          
+          {/* Category Header with H1 and Description */}
+          <Box mb="6">
+            <Heading as="h1" size="8" mb="3">
+              {category._title}
+            </Heading>
+            {category.description && (
+              <Text as="p" size="3" color="gray" style={{ lineHeight: '1.6' }}>
+                {category.description}
+              </Text>
+            )}
+          </Box>
+          
+          {/* Subcategories Section */}
+          <Box>
+            <Grid gap="4">
+              {category.subcategories.items.map((subcategory) => (
+                <Box
+                  key={subcategory._id}
+                  style={{
+                    border: '1px solid var(--gray-6)',
+                    borderRadius: '8px',
+                    padding: '24px',
+                    backgroundColor: 'var(--color-surface)'
+                  }}
                 >
-                  <Heading size="8">{category._title}</Heading>
-                  <Text color="gray">{category.description}</Text>
-                  <ArticlesList
-                    categorySlug={category._slug}
-                    articles={category.articles.items}
-                  />
-                </Grid>
-              </main>
-            </Container>
-          </>
-        )
-      }}
-    </Pump>
+                  <Heading as="h2" size="5" mb="3">
+                    {subcategory._title}
+                  </Heading>
+                  
+                  <Separator size="4" mb="4" />
+                  
+                  <Grid gap="3">
+                    {subcategory.articles.items.map((article) => (
+                      <Box key={article._id}>
+                        <ArticleLink
+                          data={article}
+                          categorySlug={category._slug}
+                        />
+                      </Box>
+                    ))}
+                  </Grid>
+                </Box>
+              ))}
+            </Grid>
+          </Box>
+        </main>
+      </Container>
+    </>
   )
 }

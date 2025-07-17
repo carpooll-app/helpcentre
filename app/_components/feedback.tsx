@@ -10,25 +10,20 @@ import {
   TextArea,
 } from '@radix-ui/themes'
 import * as React from 'react'
-import { parseFormData, sendEvent, EventSchema } from 'basehub/events'
-import { Feedback as FeedbackType } from '@/.basehub/schema'
 import { CheckCircledIcon } from '@radix-ui/react-icons'
 import { usePathname } from 'next/navigation'
 import { ThumbsUp, ThumbsDown } from 'lucide-react'
-import Cookie  from 'js-cookie'
 
 export const Feedback = ({
   ingestKey,
   schema,
 }: {
-  ingestKey: FeedbackType['submissions']['ingestKey']
-  schema: FeedbackType['submissions']['schema']
+  ingestKey: string
+  schema: any
 }) => {
   const pathname = usePathname()
 
-  const [intent, setIntent] = React.useState<
-    EventSchema<typeof ingestKey>['intent'] | null
-  >(null)
+  const [intent, setIntent] = React.useState<'Positive' | 'Negative' | null>(null)
   const [submitting, setSubmitting] = React.useState(false)
   const [shouldThank, setShouldThank] = React.useState(false)
   const formRef = React.useRef<HTMLFormElement>(null)
@@ -48,32 +43,26 @@ export const Feedback = ({
     const form = formRef.current
     if (!intent || !form || submitting) return
     const formData = new FormData(form)
-    formData.set('intent', intent)
-    formData.set('path', pathname)
-
-    try {
-      const userFromCookie = Cookie.get('intercom-user')
-      if (userFromCookie) {
-        const user = JSON.parse(decodeURIComponent(userFromCookie))
-        formData.set('email', user.email)
-      }
-    } catch (err) {
-      null
+    
+    // Simple local feedback handling
+    const feedbackData = {
+      intent,
+      message: formData.get('message'),
+      path: pathname,
+      timestamp: new Date().toISOString()
     }
 
-    const parsed = parseFormData(ingestKey, schema, formData)
-    if (!parsed.success) {
-      console.error(parsed.errors)
-      setShouldThank(true)
-      return
-    }
+    console.log('Feedback submitted:', feedbackData)
+    
+    // You can send this to your own API endpoint
+    // Example:
+    // await fetch('/api/feedback', {
+    //   method: 'POST',
+    //   headers: { 'Content-Type': 'application/json' },
+    //   body: JSON.stringify(feedbackData)
+    // })
 
     setSubmitting(true)
-    try {
-      await sendEvent(ingestKey, parsed.data)
-    } catch (e) {
-      console.error(e)
-    }
     setShouldThank(true)
   }
 

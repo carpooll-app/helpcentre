@@ -5,8 +5,16 @@ import {
   InfoCircledIcon,
 } from '@radix-ui/react-icons'
 import { Callout as RadixCallout, Link } from '@radix-ui/themes'
-import type { Callout as CalloutFragment } from '../[category]/[article]/_fragments'
-import { RichText } from 'basehub/react-rich-text'
+import { RichText } from '@/lib/markdown/markdown-renderer'
+
+export interface CalloutFragment {
+  type?: 'info' | 'warning' | 'error' | 'success'
+  content: {
+    json: {
+      content: string
+    }
+  }
+}
 
 export const Callout = ({ type = 'info', content }: CalloutFragment) => {
   const { Icon, color } =
@@ -19,8 +27,8 @@ export const Callout = ({ type = 'info', content }: CalloutFragment) => {
       <RichText
         content={content.json.content}
         components={{
-          p: (props) => <RadixCallout.Text {...props} />,
-          a: (props) => <Link {...props} />,
+          p: (props: any) => <RadixCallout.Text {...props} />,
+          a: (props: any) => <Link {...props} />,
         }}
       />
     </RadixCallout.Root>

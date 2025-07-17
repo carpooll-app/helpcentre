@@ -1,5 +1,4 @@
 /* eslint-disable @next/next/no-img-element */
-import { Pump } from '@/.basehub/react-pump'
 import {
   Button,
   Container,
@@ -9,50 +8,47 @@ import {
   VisuallyHidden,
 } from '@radix-ui/themes'
 import NextLink from 'next/link'
-import { ThemeSwitcher } from '../theme-switcher'
 import s from './header.module.scss'
 import { MobileNavbar } from './mobile-navbar'
-import { fragmentOn } from '@/.basehub'
 import { DialogTriggerDesktop as Search } from '../search'
 import Image from 'next/image'
 import { clsx } from 'clsx'
-import { draftMode } from 'next/headers'
+import { sampleSettings, sampleIndexPage } from '@/lib/data/sample-data'
 
-const navLinkFragment = fragmentOn('NavLinksItem', {
-  _id: true,
-  _title: true,
-  href: true,
-})
+export type NavLinkFragment = {
+  _id: string
+  _title: string
+  href: string
+}
 
-export type NavLinkFragment = fragmentOn.infer<typeof navLinkFragment>
+export const Header = () => {
+  // Use local data instead of BaseHub
+  const settings = sampleSettings
+  const index = sampleIndexPage
 
-export const Header = async () => {
-  return (
-    <Pump
-      draft={(await draftMode()).isEnabled}
-      queries={[
-        {
-          index: {
-            greeting: true,
-            subtitle: {
-              json: {
-                content: true,
-              },
-            },
-          },
-          settings: {
-            logo: { url: true, alt: true, width: true, height: true },
-            logoLightMode: { url: true, alt: true, width: true, height: true },
-            navLinks: {
-              items: navLinkFragment,
-            },
-          },
-        },
-      ]}
-      next={{ revalidate: 60 }}
-    >
-      {async ([{ settings }]) => {
-        'use server'
+  // Define new navigation links
+  const navLinks = [
+    {
+      _id: '2',
+      _title: 'How it Works',
+      href: '/how-it-works'
+    },
+    {
+      _id: '3',
+      _title: 'Safety',
+      href: '/safety'
+    },
+    {
+      _id: '4',
+      _title: 'Post a ride',
+      href: '/post-ride'
+    },
+    {
+      _id: '5',
+      _title: 'Find a ride',
+      href: '/find-ride'
+    }
+  ]
 
         return (
           <header className={s.header}>
@@ -78,28 +74,28 @@ export const Header = async () => {
                     <Image
                       // only hide on light-mode if there's a light-mode logo
                       className={clsx(
-                        settings.logoLightMode?.url && 'dark-only'
+                  settings?.logoLightMode?.url && 'dark-only'
                       )}
-                      src={settings.logo.url}
-                      alt={''}
-                      width={settings.logo.width}
-                      height={settings.logo.height}
-                      style={{ maxHeight: 28 }}
+                src={settings?.logo?.url || ''}
+                alt={settings?.logo?.alt || ''}
+                width={settings?.logo?.width || 150}
+                height={settings?.logo?.height || 40}
+                style={{ maxHeight: 28, objectFit: 'contain' }}
                     />
-                    {settings.logoLightMode?.url && (
+              {settings?.logoLightMode?.url && (
                       <Image
                         className="light-only"
                         src={settings.logoLightMode.url}
-                        alt={''}
-                        width={settings.logoLightMode.width}
-                        height={settings.logoLightMode.height}
-                        style={{ maxHeight: 28 }}
+                  alt={settings.logoLightMode.alt || ''}
+                  width={settings.logoLightMode.width || 150}
+                  height={settings.logoLightMode.height || 40}
+                  style={{ maxHeight: 28, objectFit: 'contain' }}
                       />
                     )}
-                    {(settings.logo.alt || settings.logoLightMode?.alt) && (
+              {(settings?.logo?.alt || settings?.logoLightMode?.alt) && (
                       <VisuallyHidden asChild>
                         <h2>
-                          {settings.logo.alt || settings.logoLightMode?.alt}
+                    {settings?.logo?.alt || settings?.logoLightMode?.alt}
                         </h2>
                       </VisuallyHidden>
                     )}
@@ -115,30 +111,22 @@ export const Header = async () => {
                   display={{ initial: 'none', sm: 'flex' }}
                 >
                   <nav>
-                    <ThemeSwitcher />
-                    {settings.navLinks.items.map((item, i, { length }) => {
-                      const isLast = i === length - 1
-                      if (isLast) {
-                        return (
-                          <Button key={item._id} asChild>
-                            <NextLink href={item.href}>{item._title}</NextLink>
-                          </Button>
-                        )
-                      }
-                      return (
+              {navLinks.map((item) => (
                         <Link key={item._id} color="gray" asChild size="2">
                           <NextLink href={item.href}>{item._title}</NextLink>
                         </Link>
-                      )
-                    })}
+              ))}
+              <Button 
+                asChild
+                style={{ borderRadius: '16px', backgroundColor: 'var(--accent-9)', color: '#163300' }}
+              >
+                <NextLink href="/signup">Sign up</NextLink>
+              </Button>
                   </nav>
                 </Flex>
-                <MobileNavbar links={settings.navLinks.items} />
+          <MobileNavbar links={navLinks} />
               </Grid>
             </Container>
           </header>
-        )
-      }}
-    </Pump>
   )
 }

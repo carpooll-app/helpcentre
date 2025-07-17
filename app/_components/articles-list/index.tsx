@@ -1,16 +1,15 @@
 import { Button, Card, Flex } from '@radix-ui/themes'
 import { ArrowRightIcon } from '@radix-ui/react-icons'
 import NextLink from 'next/link'
-import { ArticlesItem } from '@/.basehub/schema'
+import { Article } from '@/lib/data/types'
 import s from './articles-list.module.scss'
-import { getArticleHrefFromSlugPath } from '@/lib/basehub-helpers/util'
 
 type Props =
   | {
-      articles: Pick<ArticlesItem, '_id' | '_title' | '_slugPath'>[]
+      articles: Pick<Article, '_id' | '_title' | '_slugPath'>[]
     }
   | {
-      articles: Pick<ArticlesItem, '_id' | '_title' | '_slug'>[]
+      articles: Pick<Article, '_id' | '_title' | '_slug'>[]
       categorySlug: string
     }
 
@@ -37,7 +36,7 @@ export const ArticlesList = (props: Props) => {
                   '_slug' in item
                     ? // @ts-expect-error categorySlug is defined at this point
                       `/${props.categorySlug}/${item._slug}`
-                    : getArticleHrefFromSlugPath(item._slugPath)
+                    : `/${item._slugPath.split(' ').join('/')}`
                 }
                 style={{
                   display: 'flex',

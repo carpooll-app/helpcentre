@@ -1,95 +1,87 @@
 import type { Metadata } from 'next'
 import { Header } from './_components/header'
 import { ThemeProvider } from './_components/theme-provider/server'
-import { basehub } from '@/.basehub'
-import { Pump } from '@/.basehub/react-pump'
-import { Toolbar } from '@/.basehub/next-toolbar'
-
 import './globals.css'
 import { Footer } from './_components/footer'
-import { IntercomProvider } from './_components/intercom'
 import { SearchProvider } from './_components/search'
-import { draftMode } from 'next/headers'
-import { MetadataFragment } from './_fragments'
+import { GoogleTagManager } from './_components/google-tag-manager'
+import { AnalyticsWrapper } from './_components/analytics-wrapper'
+import { sampleSettings } from '@/lib/data/sample-data'
 
-export const generateMetadata = async (): Promise<Metadata> => {
-  const data = await basehub({
-    next: { revalidate: 120 },
-    draft: (await draftMode()).isEnabled,
-  }).query({
-    settings: {
-      logo: { url: true },
-      metadata: {
-        ...MetadataFragment,
-        ogImage: { url: true },
-      },
+export const metadata: Metadata = {
+  title: {
+    template: '%s | Carpooll Help Center',
+    default: 'Carpooll Help Center - Get Help with Your Rides',
+  },
+  description: 'Get help with Carpooll rideshare services. Find answers to common questions about rides, payments, safety, and more.',
+  keywords: ['carpooll', 'rideshare', 'help', 'support', 'faq', 'rides', 'transportation'],
+  authors: [{ name: 'Carpooll Team' }],
+  creator: 'Carpooll',
+  publisher: 'Carpooll',
+  formatDetection: {
+    email: false,
+    address: false,
+    telephone: false,
     },
-  })
-
-  return {
-    title: {
-      default: data.settings.metadata.title,
-      template: `%s | ${data.settings.metadata.title}`,
-    },
-    description: data.settings.metadata.description,
-    icons: [{ url: data.settings.metadata.icon.url }],
+  metadataBase: new URL('https://help.carpooll.com'),
+  alternates: {
+    canonical: '/',
+  },
     openGraph: {
+    type: 'website',
+    locale: 'en_US',
+    url: 'https://help.carpooll.com',
+    title: 'Carpooll Help Center',
+    description: 'Get help with Carpooll rideshare services. Find answers to common questions about rides, payments, safety, and more.',
+    siteName: 'Carpooll Help Center',
       images: [
         {
-          url: data.settings.metadata.ogImage.url,
+        url: '/logo-green.png',
           width: 1200,
           height: 630,
+        alt: 'Carpooll Help Center',
         },
       ],
     },
-  }
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Carpooll Help Center',
+    description: 'Get help with Carpooll rideshare services. Find answers to common questions about rides, payments, safety, and more.',
+    images: ['/logo-green.png'],
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-video-preview': -1,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+    },
+  },
+  verification: {
+    google: 'your-google-verification-code',
+  },
 }
 
-export default async function RootLayout({
+export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode
 }>) {
-  const { settings, _componentInstances } = await basehub({
-    draft: (await draftMode()).isEnabled,
-  }).query({
-    _componentInstances: { articlesItem: { _searchKey: true } },
-    settings: { intercomAppId: true },
-  })
-
-  const _searchKey = _componentInstances.articlesItem._searchKey
-
   return (
-    <html lang="en">
-      <Toolbar />
-      <Pump
-        draft={(await draftMode()).isEnabled}
-        queries={[{ settings: { metadata: { icon: { url: true } } } }]}
-        next={{ revalidate: 60 }}
-      >
-        {async ([data]) => {
-          'use server'
-
-          return (
-            <>
-              <link
-                rel="icon"
-                href={data.settings.metadata.icon.url}
-                sizes="any"
-              />
-            </>
-          )
-        }}
-      </Pump>
+    <html lang="en" suppressHydrationWarning>
       <body>
+        <GoogleTagManager />
         <ThemeProvider>
-          <IntercomProvider appId={settings.intercomAppId}>
-            <SearchProvider _searchKey={_searchKey}>
+          <SearchProvider _searchKey="local-search">
+            <AnalyticsWrapper>
               <Header />
               {children}
+            </AnalyticsWrapper>
             </SearchProvider>
             <Footer />
-          </IntercomProvider>
         </ThemeProvider>
       </body>
     </html>

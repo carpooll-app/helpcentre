@@ -2,7 +2,6 @@
 import { useToggleState } from '@/hooks/use-toggle-state'
 import { HamburgerMenuIcon } from '@radix-ui/react-icons'
 import { Box, Button, Flex, IconButton, Link, Portal } from '@radix-ui/themes'
-import { ThemeSwitcher } from '../theme-switcher'
 import { NavLinkFragment } from './index'
 import NextLink from 'next/link'
 import * as React from 'react'
@@ -73,22 +72,18 @@ export const MobileNavbar = ({ links }: { links: NavLinkFragment[] }) => {
           align="start"
           display={{ initial: toggleState.isOn ? 'flex' : 'none', sm: 'none' }}
         >
-          <ThemeSwitcher style={{ position: 'absolute', right: 24, top: 24 }} />
-          {links.map((item, i, { length }) => {
-            const isLast = i === length - 1
-            if (isLast) {
-              return (
-                <Button key={item._id} asChild size="2">
-                  <NextLink href={item.href}>{item._title}</NextLink>
-                </Button>
-              )
-            }
-            return (
+          {links.map((item) => (
               <Link key={item._id} color="gray" asChild size="2">
                 <NextLink href={item.href}>{item._title}</NextLink>
               </Link>
-            )
-          })}
+          ))}
+          <Button 
+            asChild 
+            size="2"
+            style={{ borderRadius: '16px', backgroundColor: 'var(--accent-9)', color: 'white' }}
+          >
+            <NextLink href="/signup">Sign up</NextLink>
+          </Button>
         </Flex>
       </Portal>
     </>

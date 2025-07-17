@@ -67,6 +67,70 @@ html.dark body {
   }
 }
 
-h1 {
-  text-wrap: pretty;
+h1, h2, h3, h4, h5, h6 {
+  scroll-margin-top: 100px; /* Account for fixed header */
+}
+
+/* Ensure smooth scrolling behavior */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Article content layout fixes */
+.article-content {
+  width: 100% !important;
+  max-width: 764px !important;
+  margin-right: auto !important;
+}
+
+.article-content > * {
+  width: 100% !important;
+  min-width: 0 !important;
+}
+
+/* Article layout grid for content and TOC */
+.article-layout {
+  display: grid;
+  grid-template-columns: 764px 320px;
+  gap: 24px;
+  align-items: start;
+}
+
+@media (max-width: 1023px) {
+  .article-layout {
+    display: block;
+  }
+  .toc-sidebar {
+    display: none !important;
+  }
+}
+
+.toc-sidebar {
+  position: sticky;
+  top: 120px;
+  width: 320px;
+  align-self: start;
+  height: fit-content;
+  z-index: 10;
+  display: block;
+}
+
+/* Show TOC on large screens */
+@media (min-width: 1024px) {
+  .toc-sidebar {
+    display: block !important;
+  }
+}
+
+/* Hide TOC on smaller screens */
+@media (max-width: 1023px) {
+  .toc-sidebar {
+    display: none !important;
+  }
+}
+
+/* Global styles for Radix UI components */
+/* This rule was moved from search.module.scss to fix CSS module purity issues */
+.rt-ScrollAreaViewportFocusRing {
+  display: none;
 }

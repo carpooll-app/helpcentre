@@ -21,9 +21,8 @@
       }
     }
 
-    :global(.rt-ScrollAreaViewportFocusRing) {
-      display: none;
-    }
+    // NOTE: Global selector .rt-ScrollAreaViewportFocusRing removed to fix CSS module purity
+    // The rule is now handled in globals.css to maintain the same styling
 
     .search-dialog-content__result {
       position: relative;

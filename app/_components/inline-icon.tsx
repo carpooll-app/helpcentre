@@ -1,9 +1,14 @@
-import type { InlineIcon as Fragment } from '../[category]/[article]/_fragments'
 import { ReactNode } from 'react'
 import { IconButton, Tooltip, VisuallyHidden } from '@radix-ui/themes'
 import { Icon } from './icon'
 
-export const InlineIcon = (props: Fragment & { children?: ReactNode }) => (
+type InlineIconProps = {
+  name?: string
+  tooltip?: string
+  children?: ReactNode
+}
+
+export const InlineIcon = (props: InlineIconProps) => (
   <Tooltip content={props.tooltip ?? props.children}>
     <IconButton
       disabled

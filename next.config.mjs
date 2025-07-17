@@ -2,14 +2,7 @@
 const nextConfig = {
   images: {
     remotePatterns: [
-      {
-        hostname: 'basehub.earth',
-        protocol: 'https',
-      },
-      {
-        hostname: 'assets.basehub.com',
-        protocol: 'https',
-      },
+      // Add any external image domains here if needed
     ],
   },
 }

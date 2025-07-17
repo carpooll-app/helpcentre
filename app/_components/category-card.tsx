@@ -1,22 +1,9 @@
-import { fragmentOn } from '@/.basehub'
 import { Card, Flex, Text } from '@radix-ui/themes'
 import { Icon } from './icon'
 import Link from 'next/link'
+import { Category } from '@/lib/data/types'
 
-export const CategoryMeta = fragmentOn('CategoriesItem', {
-  _id: true,
-  _title: true,
-  _slug: true,
-  description: true,
-  icon: true,
-  articles: {
-    items: {
-      _id: true,
-    },
-  },
-})
-
-export type CategoryMeta = fragmentOn.infer<typeof CategoryMeta>
+export type CategoryMeta = Category
 
 export const CategoryCard = ({ data }: { data: CategoryMeta }) => {
   return (

@@ -1,13 +1,18 @@
 'use client'
-import { Views } from '@/.basehub/schema'
 import * as React from 'react'
-import { sendEvent } from 'basehub/events'
 
-export const PageView = ({ ingestKey }: { ingestKey: Views['ingestKey'] }) => {
-  // On mount, send the event
+export const PageView = ({ ingestKey }: { ingestKey: string }) => {
+  // Simple local analytics - you can replace this with your own analytics service
   React.useEffect(() => {
-    sendEvent(ingestKey)
-  }, [ingestKey])
+    // Log page view to console for now
+    console.log('Page view:', window.location.pathname)
+    
+    // You can integrate with Google Analytics, Mixpanel, etc. here
+    // Example:
+    // gtag('config', 'GA_MEASUREMENT_ID', {
+    //   page_path: window.location.pathname,
+    // })
+  }, [])
 
   return null
 }
